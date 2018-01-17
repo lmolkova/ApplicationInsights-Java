@@ -30,6 +30,18 @@ public class CustomClassWriter extends org.objectweb.asm.ClassWriter {
     @Override
     protected String getCommonSuperClass(final String type1, final String type2) {
         try {
+        	if (classLoader == null)
+        	{
+        		if (
+        				(type1.equals("java/lang/Runnable") && type2.equals("com/microsoft/applicationinsights/web/internal/WrappedRunnable")) ||
+        				(type2.equals("java/lang/Runnable") && type1.equals("com/microsoft/applicationinsights/web/internal/WrappedRunnable")) 
+        		   )
+        		{
+        			return "java/lang/Runnable";
+        		}
+        		return super.getCommonSuperClass(type1, type2);        		
+        	}
+        	
             ClassReader info1 = typeInfo(type1);
             ClassReader info2 = typeInfo(type2);
             if ((info1.getAccess() & Opcodes.ACC_INTERFACE) != 0) {
@@ -136,5 +148,6 @@ public class CustomClassWriter extends org.objectweb.asm.ClassWriter {
         return new ClassReader(is);
     }
 }
+
 
 

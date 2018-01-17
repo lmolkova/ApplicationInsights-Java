@@ -60,7 +60,7 @@ public class DockerContextInitializer implements TelemetryInitializer {
      * the docker context.
      */
     public DockerContextInitializer() {
-        this(new FileFactory(), new DockerContextPoller(Constants.AI_SDK_DIRECTORY));
+        this(new FileFactory(), new DockerContextPoller(com.microsoft.applicationinsights.extensibility.initializer.docker.internal.Constants.AI_SDK_DIRECTORY));
     }
 
     /**
@@ -84,11 +84,11 @@ public class DockerContextInitializer implements TelemetryInitializer {
             TelemetryContext context = telemetry.getContext();
 
             // We always set the device ID, since by default it is represented by a GUID inside Docker container.
-            String containerName = dockerContext.getProperties().get(Constants.DOCKER_CONTAINER_NAME_PROPERTY_KEY);
+            String containerName = dockerContext.getProperties().get(com.microsoft.applicationinsights.extensibility.initializer.docker.internal.Constants.DOCKER_CONTAINER_NAME_PROPERTY_KEY);
             context.getDevice().setId(containerName);
 
             // If telemetry already initialized with Docker properties, we don't overwrite it.
-            if (!LocalStringsUtils.isNullOrEmpty(context.getProperties().get(Constants.DOCKER_HOST_PROPERTY_KEY))) {
+            if (!LocalStringsUtils.isNullOrEmpty(context.getProperties().get(com.microsoft.applicationinsights.extensibility.initializer.docker.internal.Constants.DOCKER_HOST_PROPERTY_KEY))) {
                 return;
             }
 
@@ -98,9 +98,9 @@ public class DockerContextInitializer implements TelemetryInitializer {
     }
 
     private void writeSDKInfoFile() {
-        String sdkInfoFilePath = String.format("%s/%s", Constants.AI_SDK_DIRECTORY, Constants.AI_SDK_INFO_FILENAME);
+        String sdkInfoFilePath = String.format("%s/%s", com.microsoft.applicationinsights.extensibility.initializer.docker.internal.Constants.AI_SDK_DIRECTORY, com.microsoft.applicationinsights.extensibility.initializer.docker.internal.Constants.Constants.AI_SDK_INFO_FILENAME);
         String instrumentationKey = TelemetryConfiguration.getActive().getInstrumentationKey();
-        String sdkInfo = String.format(Constants.AI_SDK_INFO_FILE_CONTENT_TEMPLATE, instrumentationKey);
+        String sdkInfo = String.format(com.microsoft.applicationinsights.extensibility.initializer.docker.internal.Constants.AI_SDK_INFO_FILE_CONTENT_TEMPLATE, instrumentationKey);
 
         try {
             fileFactory.create(sdkInfoFilePath, sdkInfo);

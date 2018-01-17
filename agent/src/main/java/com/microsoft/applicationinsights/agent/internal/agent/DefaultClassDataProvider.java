@@ -103,6 +103,8 @@ class DefaultClassDataProvider implements ClassDataProvider {
                 new RuntimeExceptionProvider(classesToInstrument).add();
             }
 
+            new ThreadPoolExecutorProvider(classesToInstrument).add();
+            
             addConfigurationData(agentConfiguration.getBuiltInConfiguration().getSimpleBuiltInClasses());
         }
 

@@ -34,7 +34,8 @@ public final class HttpClientMethodVisitor extends AbstractHttpMethodVisitor {
 
     private final static String FINISH_DETECT_METHOD_NAME = "httpMethodFinished";
     private final static String FINISH_METHOD_RETURN_SIGNATURE = "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IJ)V";
-
+    private final String methodName;
+    
     public HttpClientMethodVisitor(int access,
                                    String desc,
                                    String owner,
@@ -42,6 +43,7 @@ public final class HttpClientMethodVisitor extends AbstractHttpMethodVisitor {
                                    MethodVisitor methodVisitor,
                                    ClassToMethodTransformationData additionalData) {
         super(access, desc, owner, methodName, methodVisitor, additionalData);
+        this.methodName = methodName;
     }
 
     private int deltaInNS;
@@ -114,6 +116,12 @@ public final class HttpClientMethodVisitor extends AbstractHttpMethodVisitor {
 
     @Override
     protected void byteCodeForMethodExit(int opcode) {
+    	
+		mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+		mv.visitLdcInsn(owner + " " + methodName + " byteCodeForMethodExit ");
+		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V"); 
+    	
+		
         String internalName = Type.getInternalName(ImplementationsCoordinator.class);
         switch (translateExitCode(opcode)) {
             case EXIT_WITH_RETURN_VALUE:
@@ -128,10 +136,18 @@ public final class HttpClientMethodVisitor extends AbstractHttpMethodVisitor {
                 int statusLineLocal = this.newLocal(Type.getType(Object.class));
                 mv.visitVarInsn(ASTORE, statusLineLocal);
 
+        		mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+        		mv.visitLdcInsn(owner + " " + methodName + " 1 ");
+        		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V"); 
+        		
                 mv.visitVarInsn(ALOAD, statusLineLocal);
                 mv.visitMethodInsn(INVOKEINTERFACE, "org/apache/http/StatusLine", "getStatusCode", "()I", true);
                 int statusCodeLocal = this.newLocal(Type.INT_TYPE);
                 mv.visitVarInsn(ISTORE, statusCodeLocal);
+
+        		mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+        		mv.visitLdcInsn(owner + " " + methodName + " 2 ");
+        		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V"); 
 
                 //get Request-Context from response
                 mv.visitVarInsn(ALOAD, resultOfMethod.tempVarIndex);
@@ -139,6 +155,10 @@ public final class HttpClientMethodVisitor extends AbstractHttpMethodVisitor {
                 mv.visitMethodInsn(INVOKEINTERFACE, "org/apache/http/client/methods/CloseableHttpResponse", "getFirstHeader", "(Ljava/lang/String;)Lorg/apache/http/Header;", true);
                 int headerLocal = this.newLocal(Type.getType(Object.class));
                 mv.visitVarInsn(ASTORE, headerLocal);
+
+        		mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+        		mv.visitLdcInsn(owner + " " + methodName + " 3 ");
+        		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V"); 
 
                 // if header != null, getValue and continue
                 mv.visitVarInsn(ALOAD, headerLocal);
@@ -166,7 +186,30 @@ public final class HttpClientMethodVisitor extends AbstractHttpMethodVisitor {
                 mv.visitVarInsn(LLOAD, deltaInNS);
                 mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, internalName, FINISH_DETECT_METHOD_NAME, FINISH_METHOD_RETURN_SIGNATURE, false);
 
-                //skip the following instructions
+
+        		mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+                mv.visitLdcInsn(getMethodName());
+        		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V"); 
+                
+
+        		mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+                mv.visitVarInsn(ALOAD, methodLocal);
+        		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V"); 
+
+        		mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+        		mv.visitVarInsn(ALOAD, targetLocal);
+        		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V"); 
+
+
+        		mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+        		mv.visitVarInsn(ILOAD, statusCodeLocal);
+        		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(I)V"); 
+
+        		mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+        		mv.visitVarInsn(LLOAD, deltaInNS);
+        		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(J)V"); 
+
+        		//skip the following instructions
                 Label notNullLabel = new Label();
                 mv.visitJumpInsn(GOTO, notNullLabel);
 
@@ -181,6 +224,10 @@ public final class HttpClientMethodVisitor extends AbstractHttpMethodVisitor {
                 mv.visitVarInsn(ILOAD, statusCodeLocal);
                 mv.visitVarInsn(LLOAD, deltaInNS);
                 mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, internalName, FINISH_DETECT_METHOD_NAME, FINISH_METHOD_RETURN_SIGNATURE, false);
+
+        		mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+        		mv.visitVarInsn(ALOAD, childIdLocal);
+        		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V"); 
                 
                 mv.visitLabel(notNullLabel);
                 return;
