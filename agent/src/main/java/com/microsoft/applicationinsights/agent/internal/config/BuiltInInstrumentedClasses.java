@@ -148,7 +148,7 @@ final class BuiltInInstrumentedClasses {
     }
 
     // Add the needed built in classes and methods
-    private static final Map<String, BuiltInInstrumentedClass> builtInInstrumentedClasses;
+	private static final Map<String, BuiltInInstrumentedClass> builtInInstrumentedClasses;
     static
     {
         builtInInstrumentedClasses = new HashMap<String, BuiltInInstrumentedClass>();

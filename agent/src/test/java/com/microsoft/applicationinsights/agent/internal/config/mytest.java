@@ -19,30 +19,29 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-package com.microsoft.applicationinsights.agent.internal.agent;
+package com.microsoft.applicationinsights.agent.internal.config;
 
-import com.microsoft.applicationinsights.agent.internal.config.AgentConfiguration;
+import com.microsoft.applicationinsights.agent.internal.agent.ClassInstrumentationData;
+import org.junit.Test;
 
-/**
- * Defines the interface for classes that know to supply
- * The needed classes that can be instrumented by the agent
- *
- * Created by gupele on 5/11/2015.
- */
-interface ClassDataProvider {
-    /**
-     * The configuration that might add extra information
-     * @param agentConfiguration The configuration
-     */
-    void setConfiguration(AgentConfiguration agentConfiguration);
+import java.util.HashMap;
 
-    DefaultByteCodeTransformer addIfNeedeed(ClassLoader loader, String className);
-    /**
-     * Get the {@link ClassInstrumentationData}
-     * that is associated with the class name, if such information is found it is removed from the container
-     * @param className The class name to search
-     * @return {@link DefaultByteCodeTransformer} that is
-     * associated with the class name, null otherwise
-     */
-	DefaultByteCodeTransformer getAndRemove(String className);
+import static org.junit.Assert.*;
+
+public final class mytest {
+    @Test
+    public void testCtor() {
+    	XmlAgentConfigurationBuilder configBuilder = new XmlAgentConfigurationBuilder();
+    	AgentConfiguration configuration = configBuilder.parseConfigurationFile("BuiltIn.xml");
+    	
+    }
+
+    @Test
+    public void testSetters() {
+        AgentConfigurationDefaultImpl tested = new AgentConfigurationDefaultImpl();
+        HashMap<String, ClassInstrumentationData> classes = new HashMap<String, ClassInstrumentationData>();
+        tested.setRequestedClassesToInstrument(classes);
+
+        assertSame(classes, tested.getRequestedClassesToInstrument());
+    }
 }

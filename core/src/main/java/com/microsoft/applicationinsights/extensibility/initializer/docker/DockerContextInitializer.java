@@ -30,6 +30,7 @@ import com.microsoft.applicationinsights.telemetry.Telemetry;
 import com.microsoft.applicationinsights.telemetry.TelemetryContext;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentMap;
+import com.microsoft.applicationinsights.extensibility.initializer.docker.internal.Constants;
 
 // Created by yonisha on 7/29/2015.
 /**

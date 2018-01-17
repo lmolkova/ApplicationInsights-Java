@@ -50,10 +50,13 @@ public class ExceptionMethodVisitor extends AdvancedAdviceAdapter {
         mv.visitFieldInsn(GETSTATIC, internalName, "INSTANCE", "L" + internalName + ";");
         mv.visitVarInsn(ALOAD, 0);
         mv.visitMethodInsn(INVOKEVIRTUAL, internalName, RT_EXCEPTION_METHOD_NAME,RT_EXCEPTION_METHOD_SIGNATURE, false);
+        
+		/*mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+		mv.visitLdcInsn("GOTit exception");
+		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V")*/;
     }
 
     @Override
     protected void byteCodeForMethodExit(int opcode) {
-
     }
 }

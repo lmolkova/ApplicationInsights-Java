@@ -38,9 +38,9 @@ public final class HttpClassDataProvider {
     private final static String HTTP_CLIENT_METHOD_43_NAME = "doExecute";
     private final static String HTTP_CLIENT_METHOD_43_SIGNATURE = "(Lorg/apache/http/HttpHost;Lorg/apache/http/HttpRequest;Lorg/apache/http/protocol/HttpContext;)Lorg/apache/http/client/methods/CloseableHttpResponse;";
 
-    private final static String HTTP_CLIENT_42_CLASS_NAME = "org/apache/http/impl/client/AbstractHttpClient";
+	private final static String HTTP_CLIENT_42_CLASS_NAME = "org/apache/http/impl/client/CloseableHttpClient";
     private final static String HTTP_CLIENT_METHOD_42_NAME = "execute";
-    private final static String HTTP_CLIENT_METHOD_42_SIGNATURE = "(Lorg/apache/http/HttpHost;Lorg/apache/http/HttpRequest;Lorg/apache/http/protocol/HttpContext;)Lorg/apache/http/HttpResponse;";
+    private final static String HTTP_CLIENT_METHOD_42_SIGNATURE = "(Lorg/apache/http/HttpHost;Lorg/apache/http/HttpRequest;Lorg/apache/http/protocol/HttpContext;)Lorg/apache/http/client/methods/CloseableHttpResponse;";
 
     private final static String OK_HTTP_CLIENT_CALL_CLASS_NAME = "com/squareup/okhttp/Call";
     private final static String OK_HTTP_CLIENT_CALL_METHOD_NAME = "execute";

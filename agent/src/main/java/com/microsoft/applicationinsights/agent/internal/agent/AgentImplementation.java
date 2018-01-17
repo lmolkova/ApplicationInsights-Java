@@ -31,12 +31,16 @@ import com.microsoft.applicationinsights.agent.internal.logger.InternalAgentLogg
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.lang.instrument.ClassDefinition;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLDecoder;
 import java.util.Enumeration;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -84,13 +88,16 @@ public final class AgentImplementation {
             CodeInjector codeInjector = cic.getDeclaredConstructor(AgentConfiguration.class).newInstance(agentConfiguration);
 
             DataOfConfigurationForException exceptionData = agentConfiguration.getBuiltInConfiguration().getDataOfConfigurationForException();
+            exceptionData.setEnabled(true);
             if (inst.isRetransformClassesSupported()) {
                 if (exceptionData.isEnabled()) {
                     InternalAgentLogger.INSTANCE.logAlways(InternalAgentLogger.LoggingLevel.TRACE, "Instrumenting runtime exceptions.");
 
                     inst.addTransformer(codeInjector, true);
                     ImplementationsCoordinator.INSTANCE.setExceptionData(exceptionData);
+                   
                     inst.retransformClasses(RuntimeException.class);
+                   
                     inst.removeTransformer(codeInjector);
                 }
 			} else {
@@ -98,6 +105,8 @@ public final class AgentImplementation {
                     InternalAgentLogger.INSTANCE.logAlways(InternalAgentLogger.LoggingLevel.TRACE, "The JVM does not support re-transformation of classes.");
                 }
 			}
+            
+
             inst.addTransformer(codeInjector);
         } catch (Exception e) {
             InternalAgentLogger.INSTANCE.logAlways(InternalAgentLogger.LoggingLevel.ERROR, "Failed to load the code injector, exception: %s", e.getMessage());

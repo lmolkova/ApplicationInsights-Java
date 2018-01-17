@@ -25,6 +25,7 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
+import java.util.concurrent.Executor;
 
 import com.microsoft.applicationinsights.agent.internal.agent.jmx.JmxConnectorLoader;
 import com.microsoft.applicationinsights.agent.internal.config.AgentConfiguration;
@@ -71,17 +72,21 @@ public final class CodeInjector implements ClassFileTransformer {
     public byte[] transform(
             ClassLoader loader,
             String className,
-            Class classBeingRedefined,
+            Class<?> classBeingRedefined,
             ProtectionDomain protectionDomain,
             byte[] originalBuffer) throws IllegalClassFormatException {
 
-        DefaultByteCodeTransformer byteCodeTransformer = classNamesProvider.getAndRemove(className);
+		DefaultByteCodeTransformer byteCodeTransformer = classNamesProvider.addIfNeedeed(loader, className);
+
+        if (byteCodeTransformer == null) {
+        	byteCodeTransformer = classNamesProvider.getAndRemove(className);
+        }
         if (byteCodeTransformer != null) {
             try {
                 return byteCodeTransformer.transform(originalBuffer, className, loader);
             } catch (Throwable throwable) {
                 throwable.printStackTrace();
-                InternalAgentLogger.INSTANCE.logAlways(InternalAgentLogger.LoggingLevel.ERROR, "Failed to instrument '%s', exception: '%s': ", className, throwable.getMessage());
+                InternalAgentLogger.INSTANCE.logAlways(InternalAgentLogger.LoggingLevel.ERROR, "Failed to instrument '%s', exception: '%s' '%s': ", className, throwable.getClass().getName(),  throwable.getMessage());
             }
         }
 

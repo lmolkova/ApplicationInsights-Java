@@ -22,6 +22,8 @@
 package com.microsoft.applicationinsights.agent.internal.agent;
 
 import com.microsoft.applicationinsights.agent.internal.coresync.impl.ImplementationsCoordinator;
+import com.microsoft.applicationinsights.agent.internal.logger.InternalAgentLogger;
+
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -32,9 +34,10 @@ import org.objectweb.asm.Type;
  */
 public final class HttpClientMethodVisitor extends AbstractHttpMethodVisitor {
 
-    private final static String FINISH_DETECT_METHOD_NAME = "httpMethodFinished";
+	private final static String FINISH_DETECT_METHOD_NAME = "httpMethodFinished";
     private final static String FINISH_METHOD_RETURN_SIGNATURE = "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IJ)V";
-
+    private final String methodName;
+    
     public HttpClientMethodVisitor(int access,
                                    String desc,
                                    String owner,
@@ -42,6 +45,7 @@ public final class HttpClientMethodVisitor extends AbstractHttpMethodVisitor {
                                    MethodVisitor methodVisitor,
                                    ClassToMethodTransformationData additionalData) {
         super(access, desc, owner, methodName, methodVisitor, additionalData);
+        this.methodName = methodName;
     }
 
     private int deltaInNS;
@@ -52,7 +56,12 @@ public final class HttpClientMethodVisitor extends AbstractHttpMethodVisitor {
     private int appCorrelationId;
 
     @Override
-    public void onMethodEnter() {
+	public void onMethodEnter() {
+    	
+		mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+		mv.visitLdcInsn(owner + " " + methodName + " start ");
+		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V"); 
+    	
         mv.visitMethodInsn(INVOKESTATIC, "java/lang/System", "nanoTime", "()J", false);
         deltaInNS = this.newLocal(Type.LONG_TYPE);
         mv.visitVarInsn(LSTORE, deltaInNS);
@@ -102,6 +111,11 @@ public final class HttpClientMethodVisitor extends AbstractHttpMethodVisitor {
         mv.visitMethodInsn(INVOKEINTERFACE, "org/apache/http/RequestLine", "getUri", "()Ljava/lang/String;", true);
         uriLocal = this.newLocal(Type.getType(Object.class));
         mv.visitVarInsn(ASTORE, uriLocal);
+        
+		mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+		mv.visitLdcInsn(owner + " " + methodName + " start done");
+		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V"); 
+        
     }
 
     protected TempVar duplicateTopStackToTempVariable(Type typeOfTopElementInStack) {
@@ -131,6 +145,8 @@ public final class HttpClientMethodVisitor extends AbstractHttpMethodVisitor {
                 mv.visitVarInsn(ALOAD, statusLineLocal);
                 mv.visitMethodInsn(INVOKEINTERFACE, "org/apache/http/StatusLine", "getStatusCode", "()I", true);
                 int statusCodeLocal = this.newLocal(Type.INT_TYPE);
+                
+               
                 mv.visitVarInsn(ISTORE, statusCodeLocal);
 
                 //get Request-Context from response

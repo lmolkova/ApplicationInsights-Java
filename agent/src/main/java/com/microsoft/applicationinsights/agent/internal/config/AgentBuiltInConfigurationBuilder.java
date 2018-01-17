@@ -22,6 +22,7 @@
 package com.microsoft.applicationinsights.agent.internal.config;
 
 import com.microsoft.applicationinsights.agent.internal.agent.ClassInstrumentationData;
+import com.microsoft.applicationinsights.agent.internal.logger.InternalAgentLogger;
 
 import java.util.List;
 
@@ -63,6 +64,7 @@ public class AgentBuiltInConfigurationBuilder {
     }
 
     public AgentBuiltInConfigurationBuilder setHttpEnabled(boolean httpEnabled) {
+        InternalAgentLogger.INSTANCE.logAlways(InternalAgentLogger.LoggingLevel.INFO, " http %b", httpEnabled);
         this.httpEnabled = httpEnabled;
         return this;
     }

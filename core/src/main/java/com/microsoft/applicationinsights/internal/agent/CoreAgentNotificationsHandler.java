@@ -34,6 +34,7 @@ import com.microsoft.applicationinsights.agent.internal.coresync.InstrumentedCla
 
 import com.microsoft.applicationinsights.TelemetryClient;
 import com.microsoft.applicationinsights.agent.internal.coresync.impl.ImplementationsCoordinator;
+import com.microsoft.applicationinsights.agent.internal.logger.InternalAgentLogger;
 import com.microsoft.applicationinsights.internal.logger.InternalLogger;
 import com.microsoft.applicationinsights.internal.schemav2.DependencyKind;
 import com.microsoft.applicationinsights.internal.util.LocalStringsUtils;
@@ -261,6 +262,12 @@ final class CoreAgentNotificationsHandler implements AgentNotificationsHandler {
         if (methodData != null) {
             localData.methods.remove(methodData);
         }
+    }
+    
+    @Override
+    public void setCorePoolSize(int i)
+    {
+        InternalAgentLogger.INSTANCE.logAlways(InternalAgentLogger.LoggingLevel.INFO, " setCorePoolSize core");
     }
 
     private void startSqlMethod(Statement statement, String sqlStatement, Object[] additionalArgs) {

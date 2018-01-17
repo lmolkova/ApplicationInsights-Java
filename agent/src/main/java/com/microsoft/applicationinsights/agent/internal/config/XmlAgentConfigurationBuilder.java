@@ -182,6 +182,9 @@ final class XmlAgentConfigurationBuilder implements AgentConfigurationBuilder {
     }
 
     private void setBuiltInInstrumentation(AgentConfigurationDefaultImpl agentConfiguration, Element instrumentationTags) {
+    	
+        InternalAgentLogger.INSTANCE.logAlways(InternalAgentLogger.LoggingLevel.INFO, " set built in" );
+        
         AgentBuiltInConfigurationBuilder builtInConfigurationBuilder = new AgentBuiltInConfigurationBuilder();
 
         NodeList nodes = instrumentationTags.getElementsByTagName(BUILT_IN_TAG);
@@ -193,6 +196,9 @@ final class XmlAgentConfigurationBuilder implements AgentConfigurationBuilder {
         }
 
         boolean builtInIsEnabled = XmlParserUtils.getEnabled(builtInElement, BUILT_IN_TAG);
+        
+        InternalAgentLogger.INSTANCE.logAlways(InternalAgentLogger.LoggingLevel.INFO, " set built in %b ", builtInIsEnabled);
+        
         builtInConfigurationBuilder.setEnabled(builtInIsEnabled);
         if (!builtInIsEnabled) {
             builtInConfigurationBuilder.setEnabled(false);
@@ -207,6 +213,7 @@ final class XmlAgentConfigurationBuilder implements AgentConfigurationBuilder {
 
         new ConfigRuntimeExceptionDataBuilder().setRuntimeExceptionData(builtInElement, builtInConfigurationBuilder);
 
+        
         nodes = builtInElement.getElementsByTagName(HTTP_TAG);
         builtInConfigurationBuilder.setHttpEnabled(XmlParserUtils.getEnabled(XmlParserUtils.getFirst(nodes), HTTP_TAG));
 
@@ -225,6 +232,8 @@ final class XmlAgentConfigurationBuilder implements AgentConfigurationBuilder {
         new BuiltInInstrumentedClassesBuilder().setSimpleBuiltInClasses(builtInConfigurationBuilder, builtInElement);
 
         agentConfiguration.setBuiltInData(builtInConfigurationBuilder.create());
+        
+        InternalAgentLogger.INSTANCE.logAlways(InternalAgentLogger.LoggingLevel.INFO, " set built in done ");        
     }
 
     private Element getClassDataElement(Node item) {

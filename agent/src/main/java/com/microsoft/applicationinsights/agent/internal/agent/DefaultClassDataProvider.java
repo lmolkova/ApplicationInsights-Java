@@ -24,8 +24,13 @@ package com.microsoft.applicationinsights.agent.internal.agent;
 import java.util.Collection;
 import java.util.Map;
 import java.util.HashSet;
+import java.util.List;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+
+import org.objectweb.asm.MethodVisitor;
 
 import com.microsoft.applicationinsights.agent.internal.agent.exceptions.RuntimeExceptionProvider;
 import com.microsoft.applicationinsights.agent.internal.agent.http.HttpClassDataProvider;
@@ -33,6 +38,7 @@ import com.microsoft.applicationinsights.agent.internal.agent.redis.JedisClassDa
 import com.microsoft.applicationinsights.agent.internal.agent.sql.PreparedStatementClassDataProvider;
 import com.microsoft.applicationinsights.agent.internal.agent.sql.StatementClassDataDataProvider;
 import com.microsoft.applicationinsights.agent.internal.config.AgentConfiguration;
+import com.microsoft.applicationinsights.agent.internal.coresync.InstrumentedClassType;
 import com.microsoft.applicationinsights.agent.internal.coresync.impl.ImplementationsCoordinator;
 import com.microsoft.applicationinsights.agent.internal.logger.InternalAgentLogger;
 
@@ -72,6 +78,54 @@ class DefaultClassDataProvider implements ClassDataProvider {
     }
 
     @Override
+    public DefaultByteCodeTransformer addIfNeedeed(ClassLoader loader, String className)
+    {
+    	if (className == null || loader == null)
+    	{
+    		return null;
+    		
+    	}
+    	Class c;
+		try {
+			c = loader.loadClass(className);
+		} catch (ClassNotFoundException e) {
+			if (className.endsWith("ForkJoinPool"))
+				e.printStackTrace();
+			return null;
+		} catch (Exception e) {
+			if (className.endsWith("ForkJoinPool"))
+				e.printStackTrace();
+			return null;
+		}
+
+    	if (Modifier.isAbstract(c.getModifiers()) || !c.isAssignableFrom(Executor.class))
+		{
+    		return null;
+		}
+    	
+    	System.out.println("Instrumenting Executor " + className);
+        ClassInstrumentationData threadPoolData =
+        		// CLASS VISITOR FACTORY
+                new ClassInstrumentationData(className, InstrumentedClassType.OTHER)
+                	.setReportCaughtExceptions(false)
+                    .setReportExecutionTime(true);
+                        
+        MethodVisitorFactory threadPoolMethodVisitorFactory = new MethodVisitorFactory() {
+            @Override
+            public MethodVisitor create(MethodInstrumentationDecision decision, int access, String desc, String owner, String methodName, MethodVisitor methodVisitor, ClassToMethodTransformationData additionalData) {
+            	ThreadPoolExecutorMethodVisitor visitor = new ThreadPoolExecutorMethodVisitor( owner, access, desc, methodName, methodVisitor, additionalData);
+                return visitor;
+            }
+        };
+       
+        threadPoolData.addMethod(ThreadPoolExecutorMethodVisitor.ON_ENTER_METHOD_NAME, ThreadPoolExecutorMethodVisitor.ON_ENTER_METHOD_SIGNATURE, false, true, 0, threadPoolMethodVisitorFactory);
+        
+        //        ImplementationsCoordinator.INSTANCE.addClassNameToType(classInstrumentationData.getClassName(), classInstrumentationData.getClassType());
+        DefaultByteCodeTransformer transformer = new DefaultByteCodeTransformer(threadPoolData, debugMode);
+
+        return transformer;
+    }
+    @Override
     public void setConfiguration(AgentConfiguration agentConfiguration) {
         debugMode = agentConfiguration.isDebugMode();
 
@@ -98,11 +152,16 @@ class DefaultClassDataProvider implements ClassDataProvider {
                 new JedisClassDataProvider(classesToInstrument).add();
             }
 
-            if (agentConfiguration.getBuiltInConfiguration().getDataOfConfigurationForException().isEnabled()) {
-				InternalAgentLogger.INSTANCE.trace("Adding built-in Runtime instrumentation");
+//            if (agentConfiguration.getBuiltInConfiguration().getDataOfConfigurationForException().isEnabled()) {
+				InternalAgentLogger.INSTANCE.logAlways(InternalAgentLogger.LoggingLevel.INFO, "Adding built-in Runtime instrumentation");
                 new RuntimeExceptionProvider(classesToInstrument).add();
-            }
+      //      }
 
+            InternalAgentLogger.INSTANCE.logAlways(InternalAgentLogger.LoggingLevel.INFO, "Adding built-in ThreadPool instrumentation");                
+            new ThreadPoolExecutorProvider(classesToInstrument).add();
+            
+            agentConfiguration.getBuiltInConfiguration().getSimpleBuiltInClasses();
+            
             addConfigurationData(agentConfiguration.getBuiltInConfiguration().getSimpleBuiltInClasses());
         }
 
@@ -130,9 +189,11 @@ class DefaultClassDataProvider implements ClassDataProvider {
                     String onlycClassName = className.substring(index + 1);
                     classInstrumentationData = regExpClassesToInstrument.get(fullPackageName);
                     if (classInstrumentationData == null) {
+                        InternalAgentLogger.INSTANCE.logAlways(InternalAgentLogger.LoggingLevel.INFO, " classInstrumentationData == null 1");
                         return null;
                     }
 					if (!classInstrumentationData.isClassNameMatches(onlycClassName)) {
+                        InternalAgentLogger.INSTANCE.logAlways(InternalAgentLogger.LoggingLevel.INFO, " classInstrumentationData == null 2 ");
 						return null;
 					}
 
@@ -156,10 +217,13 @@ class DefaultClassDataProvider implements ClassDataProvider {
 
     private boolean isExcluded(String className) {
         for (String f : excludedPaths) {
-            if (className.startsWith(f)) {
+            if (className.startsWith(f) && !className.contains("ThreadPool")) {
+				InternalAgentLogger.INSTANCE.trace("is excluded %s true ", className);
                 return true;
             }
         }
+        
+		InternalAgentLogger.INSTANCE.trace("is excluded %s false ", className);
         return false;
     }
 

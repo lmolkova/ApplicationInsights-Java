@@ -137,4 +137,6 @@ public interface AgentNotificationsHandler {
     void exceptionThrown(Exception e);
 
     void exceptionThrown(Exception e, int i);
+    
+    void setCorePoolSize(int i);
 }

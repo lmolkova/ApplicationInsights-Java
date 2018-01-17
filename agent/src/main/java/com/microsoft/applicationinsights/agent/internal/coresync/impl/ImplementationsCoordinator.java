@@ -261,6 +261,20 @@ public enum ImplementationsCoordinator implements AgentNotificationsHandler {
         return null;
     }
 
+    @Override
+    public void setCorePoolSize(int i)
+    {
+        try {
+            AgentNotificationsHandler implementation = getImplementation();
+            if (implementation != null) {
+                implementation.setCorePoolSize(i);
+            }
+        } catch (Throwable t) {
+        }
+        
+        InternalAgentLogger.INSTANCE.logAlways(InternalAgentLogger.LoggingLevel.INFO, " getCorePoolSize ");
+    }
+    
     public String register(ClassLoader classLoader, AgentNotificationsHandler handler) {
         try {
             if (handler == null) {
