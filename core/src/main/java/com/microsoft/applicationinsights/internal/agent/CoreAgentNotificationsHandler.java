@@ -159,7 +159,6 @@ final class CoreAgentNotificationsHandler implements AgentNotificationsHandler {
             }
         }
        
-        System.out.println(String.format("'%s' sent an HTTP method: '%s', uri: '%s', duration=%s ms", identifier, method, uri, deltaInMS));
         InternalLogger.INSTANCE.trace("'%s' sent an HTTP method: '%s', uri: '%s', duration=%s ms", identifier, method, uri, deltaInMS);
         telemetryClient.track(telemetry);
     }

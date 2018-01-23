@@ -1,21 +1,22 @@
-/*package com.microsoft.applicationinsights.agent.internal.agent;
+package com.microsoft.applicationinsights.agent.internal.agent;
+
 
 public class WrappedRunnable implements Runnable
 {
-   private final Runnable task;
+    private final Runnable task;
 
-   private final ThreadContext1 caller;
+    private final Object caller;
 
-   public WrappedRunnable(Runnable task, ThreadContext1 caller)
-   {
-      this.task = task;
-      this.caller = caller;
-   }
+    public WrappedRunnable(Runnable task/*, RequestTelemetryContext caller*/)
+    {
+        this.task = task;
+        this.caller = ThreadContext.getCurrent();
+    }
 
-   @Override
-   public void run()
-   {
-	   ThreadContext1.setCurrent(caller);
-	   task.run();
-   }
-}*/
+    @Override
+    public void run()
+    {
+        ThreadContext.setCurrent(caller);
+        task.run();
+    }
+}

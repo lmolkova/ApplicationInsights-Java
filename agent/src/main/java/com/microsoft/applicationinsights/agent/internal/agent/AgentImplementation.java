@@ -125,9 +125,8 @@ public final class AgentImplementation {
 
         InternalAgentLogger.INSTANCE.info("Found jar: " + agentJarPath + " " + agentJarName);
 
-        URL configurationURL = new URL(agentJarPath + agentJarName);
-
-        JarFile agentJar = new JarFile(URLDecoder.decode(configurationURL.getFile(), "UTF-8"));
+        URL agentConfigurationURL = new URL(agentJarPath + agentJarName);
+        JarFile agentJar = new JarFile(URLDecoder.decode(agentConfigurationURL.getFile(), "UTF-8"));
 
         inst.appendToBootstrapClassLoaderSearch(agentJar);
 

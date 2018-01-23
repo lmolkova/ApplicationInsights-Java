@@ -58,7 +58,7 @@ public class ThreadContextTests {
         }
     }
 
-    @Test
+    /*@Test
     public void testNewCreatedThreadGetsTheParentContext() throws InterruptedException {
         final String expectedRequestName = "inherited_context";
         RequestTelemetryContext requestTelemetryContext = new RequestTelemetryContext(0);
@@ -79,5 +79,5 @@ public class ThreadContextTests {
 
         Assert.assertNotNull(context[0]);
         Assert.assertEquals(expectedRequestName, context[0].getHttpRequestTelemetry().getName());
-    }
+    }*/
 }

@@ -80,32 +80,16 @@ public class ThreadPoolExecutorMethodVisitor extends AdvancedAdviceAdapter  {
 
 	@Override
 	protected void onMethodEnter() {
-		
-        mv.visitMethodInsn(INVOKESTATIC, "com/microsoft/applicationinsights/web/internal/correlation/TelemetryCorrelationUtils", "generateChildDependencyId", "()Ljava/lang/String;", false);
-        int appCorrelationId = this.newLocal(Type.getType(Object.class));
-        mv.visitVarInsn(ASTORE, appCorrelationId);
-
-		mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-        mv.visitVarInsn(ALOAD, appCorrelationId);
-		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V"); 
-
-		
-/*		Label lm1 = new Label();
-		mv.visitLabel(lm1);
-		mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-		mv.visitLdcInsn("GOTit");
-		mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");*/
-
 		Label l0 = new Label();
 		mv.visitLabel(l0);
-		//mv.visitTypeInsn(NEW, "com/microsoft/applicationinsights/agent/internal/agent/WrappedRunnable");
-		mv.visitTypeInsn(NEW, "com/microsoft/applicationinsights/web/internal/WrappedRunnable");
+		mv.visitTypeInsn(NEW, "com/microsoft/applicationinsights/agent/internal/agent/WrappedRunnable");
+//		mv.visitTypeInsn(NEW, "com/microsoft/applicationinsights/web/internal/WrappedRunnable");
 		mv.visitInsn(DUP);
 		mv.visitVarInsn(ALOAD, 1);
 
 //		mv.visitMethodInsn(INVOKESTATIC, "com/microsoft/applicationinsights/agent/internal/agent/ThreadContext1", "getCurrent", "()Lcom/microsoft/applicationinsights/agent/internal/agent/ThreadContext1;");
 		
-		mv.visitMethodInsn(INVOKESPECIAL, "com/microsoft/applicationinsights/web/internal/WrappedRunnable", "<init>", "(Ljava/lang/Runnable;)V");
+		mv.visitMethodInsn(INVOKESPECIAL, "com/microsoft/applicationinsights/agent/internal/agent/WrappedRunnable", "<init>", "(Ljava/lang/Runnable;)V");
 		mv.visitVarInsn(ASTORE, 1);
 	}
 	

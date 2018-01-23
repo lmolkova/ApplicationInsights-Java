@@ -98,7 +98,8 @@ public class DockerContextInitializer implements TelemetryInitializer {
     }
 
     private void writeSDKInfoFile() {
-        String sdkInfoFilePath = String.format("%s/%s", com.microsoft.applicationinsights.extensibility.initializer.docker.internal.Constants.AI_SDK_DIRECTORY, com.microsoft.applicationinsights.extensibility.initializer.docker.internal.Constants.Constants.AI_SDK_INFO_FILENAME);
+        String sdkInfoFilePath = String.format("%s/%s", com.microsoft.applicationinsights.extensibility.initializer.docker.internal.Constants.AI_SDK_DIRECTORY,
+                com.microsoft.applicationinsights.extensibility.initializer.docker.internal.Constants.AI_SDK_INFO_FILENAME);
         String instrumentationKey = TelemetryConfiguration.getActive().getInstrumentationKey();
         String sdkInfo = String.format(com.microsoft.applicationinsights.extensibility.initializer.docker.internal.Constants.AI_SDK_INFO_FILE_CONTENT_TEMPLATE, instrumentationKey);
 
