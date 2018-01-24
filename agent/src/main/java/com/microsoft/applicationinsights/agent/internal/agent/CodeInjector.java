@@ -25,6 +25,7 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
+import java.util.concurrent.Executor;
 
 import com.microsoft.applicationinsights.agent.internal.agent.jmx.JmxConnectorLoader;
 import com.microsoft.applicationinsights.agent.internal.config.AgentConfiguration;
@@ -75,7 +76,13 @@ public final class CodeInjector implements ClassFileTransformer {
             ProtectionDomain protectionDomain,
             byte[] originalBuffer) throws IllegalClassFormatException {
 
+
+
         DefaultByteCodeTransformer byteCodeTransformer = classNamesProvider.getAndRemove(className);
+        /*if (byteCodeTransformer == null)
+        {
+            byteCodeTransformer = classNamesProvider.instrumentIfNeeded(loader, className, originalBuffer);
+        }*/
         if (byteCodeTransformer != null) {
             try {
                 return byteCodeTransformer.transform(originalBuffer, className, loader);

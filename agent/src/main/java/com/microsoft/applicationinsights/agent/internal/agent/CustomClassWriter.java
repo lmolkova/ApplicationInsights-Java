@@ -32,13 +32,13 @@ public class CustomClassWriter extends org.objectweb.asm.ClassWriter {
         try {
         	if (classLoader == null)
         	{
-        		if (
+        	/*	if (
         				(type1.equals("java/lang/Runnable") && type2.equals("com/microsoft/applicationinsights/web/internal/WrappedRunnable")) ||
         				(type2.equals("java/lang/Runnable") && type1.equals("com/microsoft/applicationinsights/web/internal/WrappedRunnable")) 
         		   )
         		{
         			return "java/lang/Runnable";
-        		}
+        		}*/
         		return super.getCommonSuperClass(type1, type2);        		
         	}
         	
@@ -118,7 +118,7 @@ public class CustomClassWriter extends org.objectweb.asm.ClassWriter {
      * @return
      * @throws IOException
      */
-    private boolean typeImplements(String type, ClassReader info, String itf) throws IOException {
+    public boolean typeImplements(String type, ClassReader info, String itf) throws IOException {
         while (!"java/lang/Object".equals(type)) {
             String[] itfs = info.getInterfaces();
             for (String itf2 : itfs) {
@@ -144,7 +144,15 @@ public class CustomClassWriter extends org.objectweb.asm.ClassWriter {
      * @throws IOException
      */
     private ClassReader typeInfo(final String type) throws IOException {
-        InputStream is = classLoader.getResourceAsStream(type + ".class");
+        InputStream is = null;
+        if (classLoader != null )
+        {
+            is = classLoader.getResourceAsStream(type + ".class");
+        }
+        else
+        {
+            is = ClassLoader.getSystemClassLoader().getResourceAsStream(type + ".class");
+        }
         return new ClassReader(is);
     }
 }

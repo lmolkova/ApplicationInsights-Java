@@ -44,4 +44,6 @@ interface ClassDataProvider {
      * associated with the class name, null otherwise
      */
     DefaultByteCodeTransformer getAndRemove(String className);
+
+    DefaultByteCodeTransformer instrumentIfNeeded(ClassLoader loader,  final String className, byte[] originalBuffer);
 }

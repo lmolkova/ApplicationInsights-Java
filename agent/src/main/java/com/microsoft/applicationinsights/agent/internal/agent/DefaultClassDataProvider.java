@@ -21,11 +21,15 @@
 
 package com.microsoft.applicationinsights.agent.internal.agent;
 
+import java.io.IOException;
+import java.lang.reflect.Modifier;
+import java.security.ProtectionDomain;
 import java.util.Collection;
 import java.util.Map;
 import java.util.HashSet;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 
 import com.microsoft.applicationinsights.agent.internal.agent.exceptions.RuntimeExceptionProvider;
 import com.microsoft.applicationinsights.agent.internal.agent.http.HttpClassDataProvider;
@@ -33,8 +37,12 @@ import com.microsoft.applicationinsights.agent.internal.agent.redis.JedisClassDa
 import com.microsoft.applicationinsights.agent.internal.agent.sql.PreparedStatementClassDataProvider;
 import com.microsoft.applicationinsights.agent.internal.agent.sql.StatementClassDataDataProvider;
 import com.microsoft.applicationinsights.agent.internal.config.AgentConfiguration;
+import com.microsoft.applicationinsights.agent.internal.coresync.InstrumentedClassType;
 import com.microsoft.applicationinsights.agent.internal.coresync.impl.ImplementationsCoordinator;
 import com.microsoft.applicationinsights.agent.internal.logger.InternalAgentLogger;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.MethodVisitor;
 
 /**
  * Created by gupele on 5/11/2015.
@@ -154,6 +162,54 @@ class DefaultClassDataProvider implements ClassDataProvider {
         DefaultByteCodeTransformer transformer = new DefaultByteCodeTransformer(classInstrumentationData, debugMode);
 
         return transformer;
+    }
+
+    @Override
+    public DefaultByteCodeTransformer instrumentIfNeeded(
+            ClassLoader loader,
+            final String className,
+            byte[] originalBuffer) {
+
+        try {
+            ClassReader cr = new ClassReader(originalBuffer);
+            CustomClassWriter cw = new CustomClassWriter(ClassWriter.COMPUTE_FRAMES, loader);
+
+/*            Class<?> clazz = null;
+            if (loader == null) {
+                clazz = Class.forName(className, false, ClassLoader.getSystemClassLoader());
+            }
+            else{
+                clazz = Class.forName(className, false, loader);
+            }*/
+
+            //if (clazz.isAssignableFrom(Executor.class)  && !Modifier.isAbstract( clazz.getModifiers() ))
+            if (cw.typeImplements(className, cr, "java/util/concurrent/Executor"))
+            {
+                ClassInstrumentationData executorClassData =
+                        // CLASS VISITOR FACTORY
+                        new ClassInstrumentationData(className, InstrumentedClassType.OTHER)
+                                .setReportCaughtExceptions(false)
+                                .setReportExecutionTime(true);
+
+                MethodVisitorFactory executirVisitorFactory = new MethodVisitorFactory() {
+                    @Override
+                    public MethodVisitor create(MethodInstrumentationDecision decision, int access, String desc, String owner, String methodName, MethodVisitor methodVisitor, ClassToMethodTransformationData additionalData) {
+                        ThreadPoolExecutorMethodVisitor visitor = new ThreadPoolExecutorMethodVisitor( className, access, desc, methodName, methodVisitor, additionalData);
+                        return visitor;
+                    }
+                };
+
+                executorClassData.addMethod(ThreadPoolExecutorMethodVisitor.ON_ENTER_METHOD_NAME, ThreadPoolExecutorMethodVisitor.ON_ENTER_METHOD_SIGNATURE, false, true, 0, executirVisitorFactory);
+
+                ImplementationsCoordinator.INSTANCE.addClassNameToType(executorClassData.getClassName(), executorClassData.getClassType());
+                return new DefaultByteCodeTransformer(executorClassData, debugMode);
+            }
+        } catch (Throwable t) {
+            InternalAgentLogger.INSTANCE.logAlways(InternalAgentLogger.LoggingLevel.ERROR, "Failed to load instrumentation for thread pool: '%s':'%s'", t.getClass().getName(), t.getMessage());
+            return null;
+        }
+
+        return null;
     }
 
     private boolean isExcluded(String className) {

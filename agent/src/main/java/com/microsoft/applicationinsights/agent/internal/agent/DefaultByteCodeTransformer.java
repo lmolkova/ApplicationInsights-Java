@@ -24,6 +24,9 @@ package com.microsoft.applicationinsights.agent.internal.agent;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
+
+import java.io.IOException;
+import java.util.concurrent.Executor;
 //import org.objectweb.asm.util.CheckClassAdapter;
 
 
@@ -56,7 +59,17 @@ final class DefaultByteCodeTransformer implements ByteCodeTransformer {
         }
 
         ClassReader cr = new ClassReader(originalBuffer);
-        ClassWriter cw = new CustomClassWriter(ClassWriter.COMPUTE_FRAMES, loader);
+        CustomClassWriter cw = new CustomClassWriter(ClassWriter.COMPUTE_FRAMES, loader);
+
+
+        /*if (className.endsWith("ForkJoinPool"))
+        {
+            try {
+                System.out.println("!!!!!! "  + cw.typeImplements(className, cr, "java/util/concurrent/Executor"));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }*/
         ClassVisitor dcv = classInstrumentationData.getDefaultClassInstrumentor(cw);
         cr.accept(dcv, ClassReader.SKIP_FRAMES);
 
