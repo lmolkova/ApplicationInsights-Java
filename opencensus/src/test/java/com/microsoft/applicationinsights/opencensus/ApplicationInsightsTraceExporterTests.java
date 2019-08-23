@@ -1,10 +1,17 @@
 package com.microsoft.applicationinsights.opencensus;
 
+import com.microsoft.applicationinsights.TelemetryClient;
 import com.microsoft.applicationinsights.TelemetryConfiguration;
 import com.microsoft.applicationinsights.channel.TelemetryChannel;
 import com.microsoft.applicationinsights.extensibility.TelemetryInitializer;
+import com.microsoft.applicationinsights.telemetry.RequestTelemetry;
 import com.microsoft.applicationinsights.telemetry.Telemetry;
+import com.microsoft.applicationinsights.telemetry.TraceTelemetry;
+import com.microsoft.localforwarder.library.inputs.contracts.Request;
+import com.sun.deploy.trace.Trace;
+import io.opencensus.common.Scope;
 import io.opencensus.trace.Span;
+import io.opencensus.trace.Tracer;
 import io.opencensus.trace.Tracing;
 import io.opencensus.trace.samplers.Samplers;
 import java.util.LinkedList;
@@ -78,7 +85,7 @@ public class ApplicationInsightsTraceExporterTests {
 
   @Test
   public void RegisterWithSdkVersion() throws InterruptedException {
-    ApplicationInsightsTraceExporter.setSdvVersionPrefix("foo");
+    ApplicationInsightsTraceExporter.setSdkVersionPrefix("foo");
     ApplicationInsightsTraceExporter.createAndRegister(configuration);
 
     for (int i = 0; i < 33; i++) { // send batch to force export
@@ -140,5 +147,43 @@ public class ApplicationInsightsTraceExporterTests {
 
     Assert.assertTrue(request.getProperties().containsKey("some id"));
     Assert.assertEquals(guid, request.getProperties().get("some id"));
+  }
+
+  @Test
+  public void CustomAppInsightsTelemetryIsTrackedInScopeOfRequest() throws InterruptedException {
+    ApplicationInsightsTraceExporter.createAndRegister(configuration);
+
+    Tracer tracer = Tracing.getTracer();
+    configuration.getTelemetryInitializers().add(new SpanContextTelemetryInitializer());
+
+    TelemetryClient aiClient = new TelemetryClient(configuration);
+
+    Span span = tracer
+        .spanBuilder("span")
+        .setSampler(Samplers.alwaysSample())
+        .startSpan();
+
+    try (Scope s = tracer.withSpan(span)) {
+      aiClient.trackTrace("hello world");
+    }
+
+    span.end();
+
+    for (int delay = 0; delay <= 5100; delay += 100) { // 5000 - default export interval
+      if (eventsSent.size() < 2 ) {
+        Thread.sleep(100);
+      }
+    }
+
+    Assert.assertEquals(2, eventsSent.size());
+    Assert.assertTrue(eventsSent.get(0) instanceof TraceTelemetry);
+    Assert.assertTrue(eventsSent.get(1) instanceof RequestTelemetry);
+
+    TraceTelemetry trace = (TraceTelemetry)eventsSent.get(0);
+    RequestTelemetry request = (RequestTelemetry) eventsSent.get(1);
+
+    Assert.assertEquals(trace.getContext().getOperation().getId(), request.getContext().getOperation().getId());
+    Assert.assertEquals(trace.getContext().getOperation().getId(), request.getContext().getOperation().getId());
+    Assert.assertEquals(trace.getContext().getOperation().getParentId(), request.getId());
   }
 }

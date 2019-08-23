@@ -120,7 +120,7 @@ public final class ApplicationInsightsTraceExporter {
     spanExporter.unregisterHandler(REGISTER_NAME);
   }
 
-  public static void setSdvVersionPrefix(String sdkVersionPrefix) {
+  public static void setSdkVersionPrefix(String sdkVersionPrefix) {
     sdkVersion = sdkVersionPrefix + ":" + EXPORTER_VERSION;
   }
 }

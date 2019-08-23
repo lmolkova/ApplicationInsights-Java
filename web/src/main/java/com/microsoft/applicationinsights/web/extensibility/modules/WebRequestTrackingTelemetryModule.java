@@ -25,12 +25,18 @@ import com.microsoft.applicationinsights.TelemetryClient;
 import com.microsoft.applicationinsights.TelemetryConfiguration;
 import com.microsoft.applicationinsights.extensibility.TelemetryModule;
 import com.microsoft.applicationinsights.internal.logger.InternalLogger;
+import com.microsoft.applicationinsights.opencensus.ApplicationInsightsTraceExporter;
+import com.microsoft.applicationinsights.opencensus.SpanContextTelemetryInitializer;
 import com.microsoft.applicationinsights.telemetry.RequestTelemetry;
 import com.microsoft.applicationinsights.web.extensibility.initializers.WebOperationIdTelemetryInitializer;
 import com.microsoft.applicationinsights.web.internal.RequestTelemetryContext;
 import com.microsoft.applicationinsights.web.internal.correlation.TelemetryCorrelationUtils;
 import com.microsoft.applicationinsights.web.internal.correlation.TraceContextCorrelation;
 import io.opencensus.common.Scope;
+import io.opencensus.trace.Tracing;
+import io.opencensus.trace.config.TraceConfig;
+import io.opencensus.trace.config.TraceParams;
+import io.opencensus.trace.samplers.Samplers;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -47,6 +53,9 @@ public class WebRequestTrackingTelemetryModule
     private boolean isInitialized = false;
 
     public boolean isW3CEnabled = false;
+    public boolean configureOpenCensus = true;
+
+    private final String CONFIGURE_OPENCENSUS_PARAMETER = "ConfigureOpenCensus";
 
     /**
      * Tag to indicate if W3C tracing protocol is enabled.
@@ -60,7 +69,7 @@ public class WebRequestTrackingTelemetryModule
     private final String W3C_BACKCOMPAT_PARAMETER = "enableW3CBackCompat";
 
     /**
-     * The {@link RequestTelemetryContext} instance propogated from
+     * The {@link RequestTelemetryContext} instance propagated from
      * {@link com.microsoft.applicationinsights.web.internal.httputils.HttpServerHandler}
      */
     private RequestTelemetryContext requestTelemetryContext;
@@ -98,6 +107,11 @@ public class WebRequestTrackingTelemetryModule
                 W3C_BACKCOMPAT_PARAMETER
             ));
             TraceContextCorrelation.setIsW3CBackCompatEnabled(enableBackCompatibilityForW3C);
+        }
+
+        if (configurationData.containsKey(CONFIGURE_OPENCENSUS_PARAMETER)) {
+            configureOpenCensus = Boolean.valueOf(configurationData.get(CONFIGURE_OPENCENSUS_PARAMETER));
+            InternalLogger.INSTANCE.trace(String.format("OpenCensus auto-configuration is enabled %s", configureOpenCensus));
         }
     }
 
@@ -180,10 +194,24 @@ public class WebRequestTrackingTelemetryModule
     public void initialize(TelemetryConfiguration configuration) {
         try {
             telemetryClient = new TelemetryClient(configuration);
+            if (configureOpenCensus && isW3CEnabled) {
+                configureOpenCensus(configuration);
+            }
             isInitialized = true;
         } catch (Exception e) {
             InternalLogger.INSTANCE.error("Failed to initialize telemetry module %s. Exception: %s.", this.getClass().getSimpleName(), e.toString());
         }
+    }
+
+    private void configureOpenCensus(TelemetryConfiguration configuration) {
+        configuration.getTelemetryInitializers().add(0, new SpanContextTelemetryInitializer());
+        TraceConfig traceConfig = Tracing.getTraceConfig();
+        TraceParams activeTraceParams = traceConfig.getActiveTraceParams();
+        traceConfig.updateActiveTraceParams(
+            activeTraceParams.toBuilder().setSampler(Samplers.alwaysSample()).build());
+
+        ApplicationInsightsTraceExporter.setSdkVersionPrefix("java-web-ot"); // TODO
+        ApplicationInsightsTraceExporter.createAndRegister(configuration);
     }
 
     // endregion Public

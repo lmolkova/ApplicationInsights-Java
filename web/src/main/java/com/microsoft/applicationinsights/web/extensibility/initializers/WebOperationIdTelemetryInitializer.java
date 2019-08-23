@@ -23,7 +23,6 @@ package com.microsoft.applicationinsights.web.extensibility.initializers;
 
 import com.microsoft.applicationinsights.common.CommonUtils;
 import com.microsoft.applicationinsights.internal.logger.InternalLogger;
-import com.microsoft.applicationinsights.opencensus.SpanContextTelemetryInitializer;
 import com.microsoft.applicationinsights.telemetry.RequestTelemetry;
 import com.microsoft.applicationinsights.telemetry.Telemetry;
 import com.microsoft.applicationinsights.web.internal.RequestTelemetryContext;
@@ -35,8 +34,6 @@ import java.util.Map;
  */
 public class WebOperationIdTelemetryInitializer extends WebTelemetryInitializerBase {
 
-    private final SpanContextTelemetryInitializer spanContextTelemetryInitializer = new SpanContextTelemetryInitializer();
-
     /**
      * Initializes the properties of the given telemetry.
      */
@@ -44,9 +41,6 @@ public class WebOperationIdTelemetryInitializer extends WebTelemetryInitializerB
     protected void onInitializeTelemetry(Telemetry telemetry) {
         // WebOperationIdTelemetryInitializer should be deprecated going forward in favor of
         // SpanContextTelemetryInitializer. Now, it should only be used when W3C and OpenCensus are disabled
-        // Here we proxy calls to SpanContextTelemetryInitializer and fall-back to Http RequestTelemetryContext
-        spanContextTelemetryInitializer.initialize(telemetry);
-
         RequestTelemetryContext telemetryContext = ThreadContext.getRequestTelemetryContext();
 
         if (telemetryContext == null) {

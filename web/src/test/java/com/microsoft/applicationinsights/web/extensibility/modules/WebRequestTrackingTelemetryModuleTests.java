@@ -280,11 +280,11 @@ public class WebRequestTrackingTelemetryModuleTests {
         Assert.assertEquals(TelemetryCorrelationUtilsTests.getRequestSourceValue("id1" , null), requestTelemetry.getSource());
 
         Assert.assertEquals(BlankSpan.INSTANCE, Tracing.getTracer().getCurrentSpan());
-        Assert.assertTrue(requestTelemetry.getProperties().containsKey("tracestate"));
-        Assert.assertEquals("foo=1,bar=xyz", requestTelemetry.getProperties().get("tracestate"));
-
+        Assert.assertTrue(requestTelemetry.getProperties().containsKey("foo"));
+        Assert.assertTrue(requestTelemetry.getProperties().containsKey("bar"));
+        Assert.assertEquals("1", requestTelemetry.getProperties().get("foo"));
+        Assert.assertEquals("xyz", requestTelemetry.getProperties().get("bar"));
     }
-
 
     @Test
     public void testLegacyHeadersAreCapturedWhenW3CIsTurnedOn() {
@@ -622,8 +622,10 @@ public class WebRequestTrackingTelemetryModuleTests {
 
         Assert.assertEquals(BlankSpan.INSTANCE, Tracing.getTracer().getCurrentSpan());
         Assert.assertFalse(exceptionTelemetry.getProperties().containsKey("tracestate"));
-        Assert.assertTrue(requestTelemetry.getProperties().containsKey("tracestate"));
-        Assert.assertEquals("foo=1,bar=xyz", requestTelemetry.getProperties().get("tracestate"));
+        Assert.assertTrue(requestTelemetry.getProperties().containsKey("foo"));
+        Assert.assertTrue(requestTelemetry.getProperties().containsKey("bar"));
+        Assert.assertEquals("1", requestTelemetry.getProperties().get("foo"));
+        Assert.assertEquals("xyz", requestTelemetry.getProperties().get("bar"));
     }
 
     @Test

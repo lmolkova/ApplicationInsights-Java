@@ -69,7 +69,6 @@ public class ApplicationInsightsExporterHandlerTests {
   private TelemetryClient telemetryClient;
   private TelemetryChannel channel;
 
-  // TODO SDK version
   @Before
   public void setUp() {
     attributes = new HashMap<>();
